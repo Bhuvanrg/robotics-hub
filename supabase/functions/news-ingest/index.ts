@@ -157,7 +157,17 @@ async function fetchRss(url: string) {
       const author = s(e.author?.name || (Array.isArray(e.author) ? e.author[0]?.name : ''));
       const description = s(e.summary);
       const content = s(e.content);
-      return { title, link, guid, pubDate, author, description, content, enclosure: '', mediaThumb: '' };
+      return {
+        title,
+        link,
+        guid,
+        pubDate,
+        author,
+        description,
+        content,
+        enclosure: '',
+        mediaThumb: '',
+      };
     });
   }
 

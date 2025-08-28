@@ -42,10 +42,19 @@ export interface FeedQuery {
 
 type JoinedRow = FeedItem & { sources?: { id: number; name: string; type: 'rss' | 'youtube' } };
 
-export async function getFeed({ level, program, programs, sourcePrograms, type, cursor, limit = 24, sourceId }: FeedQuery) {
+export async function getFeed({
+  level,
+  program,
+  programs,
+  sourcePrograms,
+  type,
+  cursor,
+  limit = 24,
+  sourceId,
+}: FeedQuery) {
   let q = supabase
     .from('feed_items')
-  .select('*, sources:source_id (id, name, type)')
+    .select('*, sources:source_id (id, name, type)')
     .order('published_at', { ascending: false })
     .limit(limit);
 
@@ -85,7 +94,7 @@ export async function getFeed({ level, program, programs, sourcePrograms, type, 
 export async function getItem(id: string) {
   const { data } = await supabase
     .from('feed_items')
-  .select('*, sources:source_id (id, name, type)')
+    .select('*, sources:source_id (id, name, type)')
     .eq('id', id)
     .single();
   if (!data) return null;

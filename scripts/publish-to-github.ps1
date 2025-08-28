@@ -37,12 +37,24 @@ try {
 $full = "$Owner/$RepoName"
 $exists = (gh repo view $full 2>$null) -ne $null
 if (-not $exists) {
-  Exec "gh repo create $full --$Visibility --source . --remote origin --push"
-} else {
-  # Ensure remote
-  $hasOrigin = (git remote 2>$null | Select-String -SimpleMatch "origin").Length -gt 0
-  if (-not $hasOrigin) { Exec "git remote add origin https://github.com/$full.git" }
-  Exec "git push -u origin main"
+  $created = $true
+  try {
+    Exec "gh repo create $full --$Visibility --source . --remote origin --push"
+  } catch {
+    $created = $false
+  }
+  # Verify creation
+  $exists = (gh repo view $full 2>$null) -ne $null
+  if (-not $exists) {
+    Write-Host "Could not create repo under $Owner. Falling back to creating under the authenticated user." -ForegroundColor Yellow
+    Exec "gh repo create $RepoName --$Visibility --source . --remote origin"
+    $full = "$(gh api user | ConvertFrom-Json | Select-Object -ExpandProperty login)/$RepoName"
+  }
 }
+
+# Ensure remote and push
+$hasOrigin = (git remote 2>$null | Select-String -SimpleMatch "origin").Length -gt 0
+if (-not $hasOrigin) { Exec "git remote add origin https://github.com/$full.git" }
+Exec "git push -u origin main"
 
 Write-Host "Done. Repo: https://github.com/$full" -ForegroundColor Green

@@ -15,13 +15,7 @@ import OnboardingInterests from './OnboardingInterests';
 import { fetchUserProfile } from '@/services/userProfiles';
 
 // Lightweight gate that shows the onboarding interests overlay for users without interests
-function OnboardingGate({
-  userId,
-  displayName,
-}: {
-  userId: string;
-  displayName?: string;
-}) {
+function OnboardingGate({ userId, displayName }: { userId: string; displayName?: string }) {
   const { preferences } = useUserPreferences();
   const [show, setShow] = useState(false);
   const [initialInterests, setInitialInterests] = useState<string[]>([]);
@@ -156,9 +150,7 @@ export function MainApp({ user, onLogout }: MainAppProps) {
         {/* Global toast notifications */}
         <Toaster position="top-center" richColors closeButton />
         {/* Onboarding interests overlay for new users */}
-        {user?.id && (
-          <OnboardingGate userId={user.id} displayName={displayName} />
-        )}
+        {user?.id && <OnboardingGate userId={user.id} displayName={displayName} />}
         {/* Top Header */}
         <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3">
           <h1 className="text-xl font-bold text-teal-600">Robotics Hub</h1>

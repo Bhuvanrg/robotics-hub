@@ -147,7 +147,11 @@ export function OnboardingInterests({
             <Button variant="ghost" onClick={() => save(true)} disabled={saving}>
               Skip for now
             </Button>
-            <Button onClick={() => save(false)} disabled={saving} className="bg-teal-600 hover:bg-teal-700">
+            <Button
+              onClick={() => save(false)}
+              disabled={saving}
+              className="bg-teal-600 hover:bg-teal-700"
+            >
               Continue
             </Button>
           </div>

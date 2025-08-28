@@ -172,10 +172,15 @@ export function AuthScreen() {
             with a parent or mentor present.
           </p>
           <p className="text-[10px] text-gray-400">
-            By continuing you agree to our
-            {' '}<a className="underline" href="/terms.html" target="_blank" rel="noreferrer">Terms</a>
-            {' '}and{' '}
-            <a className="underline" href="/privacy.html" target="_blank" rel="noreferrer">Privacy Policy</a>.
+            By continuing you agree to our{' '}
+            <a className="underline" href="/terms.html" target="_blank" rel="noreferrer">
+              Terms
+            </a>{' '}
+            and{' '}
+            <a className="underline" href="/privacy.html" target="_blank" rel="noreferrer">
+              Privacy Policy
+            </a>
+            .
           </p>
         </div>
       </div>

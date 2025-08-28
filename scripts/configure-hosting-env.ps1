@@ -30,11 +30,12 @@ switch ($Provider) {
     netlify env:set VITE_SUPABASE_ANON_KEY "$SupabaseAnonKey" | Out-Host
   }
   'cloudflare' {
-    Need 'wrangler' 'https://developers.cloudflare.com/pages/framework-guides/deploy-a-vite-project/'
+  # Use npm exec to invoke wrangler without requiring a global install
+  Need 'npm' 'https://nodejs.org/en/download/package-manager'
     if (-not $SupabaseUrl -or -not $SupabaseAnonKey) { throw 'Provide -SupabaseUrl and -SupabaseAnonKey' }
-    wrangler pages project create $ProjectName -y 2>$null | Out-Null
-    $SupabaseUrl | wrangler pages project secret put VITE_SUPABASE_URL --project-name $ProjectName | Out-Host
-    $SupabaseAnonKey | wrangler pages project secret put VITE_SUPABASE_ANON_KEY --project-name $ProjectName | Out-Host
+  npm exec --yes --package=wrangler -- wrangler pages project create $ProjectName -y 2>$null | Out-Null
+  $SupabaseUrl     | npm exec --yes --package=wrangler -- wrangler pages secret put VITE_SUPABASE_URL --project-name $ProjectName | Out-Host
+  $SupabaseAnonKey | npm exec --yes --package=wrangler -- wrangler pages secret put VITE_SUPABASE_ANON_KEY --project-name $ProjectName | Out-Host
   }
 }
 

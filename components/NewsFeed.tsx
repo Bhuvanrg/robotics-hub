@@ -52,18 +52,25 @@ export function NewsFeed({ user: _user }: NewsFeedProps) {
       if (/(^|\b)fll(\b|$)/i.test(w)) picks.add('fll');
     }
     const arr = Array.from(picks);
-    const programs = arr.length > 0 ? ([...arr, 'general'] as Array<'fll' | 'ftc' | 'frc' | 'general'>) : undefined;
+    const programs =
+      arr.length > 0
+        ? ([...arr, 'general'] as Array<'fll' | 'ftc' | 'frc' | 'general'>)
+        : undefined;
     return { selectedPrograms: arr, programsForQuery: programs };
   }, [interestWords]);
 
   const scoreItem = useCallback(
     (it: FeedItem): number => {
       let s = Number(it.score || 0);
-      const hours = Math.max(0, (Date.now() - new Date(it.published_at).getTime()) / (1000 * 60 * 60));
+      const hours = Math.max(
+        0,
+        (Date.now() - new Date(it.published_at).getTime()) / (1000 * 60 * 60)
+      );
       const recency = Math.max(0, 72 - hours) / 72; // 0..1
       s += recency;
       if (interestWords.length) {
-        const hay = `${it.title} ${it.excerpt || ''} ${it.author || ''} ${it.source?.name || ''}`.toLowerCase();
+        const hay =
+          `${it.title} ${it.excerpt || ''} ${it.author || ''} ${it.source?.name || ''}`.toLowerCase();
         let hits = 0;
         for (const w of interestWords) {
           if (!w) continue;
@@ -108,7 +115,7 @@ export function NewsFeed({ user: _user }: NewsFeedProps) {
       sourceId: sourceId !== 'all' ? Number(sourceId) : undefined,
       programs: programsForQuery,
     })
-    .then(({ items: rows, nextCursor }) => {
+      .then(({ items: rows, nextCursor }) => {
         if (!cancelled) {
           const filtered = selectedPrograms.length
             ? rows.filter((r) => {
@@ -116,8 +123,8 @@ export function NewsFeed({ user: _user }: NewsFeedProps) {
                 return itemProg === 'general' || selectedPrograms.includes(itemProg);
               })
             : rows;
-      const finalItems = selectedPrograms.length && filtered.length === 0 ? rows : filtered;
-      setItems(mergeAndSort([], finalItems));
+          const finalItems = selectedPrograms.length && filtered.length === 0 ? rows : filtered;
+          setItems(mergeAndSort([], finalItems));
           setCursor(nextCursor);
         }
       })
@@ -136,14 +143,14 @@ export function NewsFeed({ user: _user }: NewsFeedProps) {
       programs: programsForQuery,
       cursor,
     });
-  const filtered = selectedPrograms.length
+    const filtered = selectedPrograms.length
       ? rows.filter((r) => {
           const itemProg = (r.program || 'general') as 'fll' | 'ftc' | 'frc' | 'general';
           return itemProg === 'general' || selectedPrograms.includes(itemProg);
         })
       : rows;
-  const finalItems = selectedPrograms.length && filtered.length === 0 ? rows : filtered;
-  setItems((prev) => mergeAndSort(prev, finalItems));
+    const finalItems = selectedPrograms.length && filtered.length === 0 ? rows : filtered;
+    setItems((prev) => mergeAndSort(prev, finalItems));
     setCursor(nextCursor);
     setLoading(false);
   };
@@ -220,13 +227,27 @@ export function NewsFeed({ user: _user }: NewsFeedProps) {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="secondary" onClick={() => window.open(it.url, '_blank')}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => window.open(it.url, '_blank')}
+                  >
                     Open
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => postFeedback(it.id, 'save')} title="Save">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => postFeedback(it.id, 'save')}
+                    title="Save"
+                  >
                     Save
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => postFeedback(it.id, 'like')} title="Like">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => postFeedback(it.id, 'like')}
+                    title="Like"
+                  >
                     Like
                   </Button>
                 </div>

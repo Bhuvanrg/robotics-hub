@@ -189,7 +189,9 @@ export async function sendTestDigest(edgeUrl?: string, days = 7) {
   // Derive Edge Functions base URL from Vite env if not explicitly provided
   type ViteEnv = { VITE_EDGE_URL?: string; VITE_SUPABASE_URL?: string };
   const viteEnv: ViteEnv | undefined =
-    typeof import.meta !== 'undefined' ? ((import.meta as unknown as { env?: ViteEnv }).env ?? undefined) : undefined;
+    typeof import.meta !== 'undefined'
+      ? ((import.meta as unknown as { env?: ViteEnv }).env ?? undefined)
+      : undefined;
   const baseUrl =
     edgeUrl?.replace(/\/$/, '') ||
     viteEnv?.VITE_EDGE_URL ||
