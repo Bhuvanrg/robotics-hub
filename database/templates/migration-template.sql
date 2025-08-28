@@ -1,0 +1,52 @@
+-- <NNN>_<name>.sql
+-- Purpose: <short description>
+-- Notes: Use idempotent patterns. Guard triggers/policies. Avoid breaking changes unless guarded.
+
+-- Example: add a column
+-- alter table public.my_table add column if not exists new_field text;
+
+-- Example: drop a column (guarded)
+-- DO $$
+-- BEGIN
+--   IF EXISTS (
+--     SELECT 1 FROM pg_attribute a
+--     JOIN pg_class c ON c.oid = a.attrelid
+--     JOIN pg_namespace n ON n.oid = c.relnamespace
+--     WHERE n.nspname='public' AND c.relname='my_table' AND a.attname='old_field' AND a.attnum > 0 AND NOT a.attisdropped
+--   ) THEN
+--     ALTER TABLE public.my_table DROP COLUMN old_field;
+--   END IF;
+-- END $$;
+
+-- Example: rename a column (guarded)
+-- DO $$
+-- BEGIN
+--   IF EXISTS (
+--     SELECT 1 FROM pg_attribute a
+--     JOIN pg_class c ON c.oid = a.attrelid
+--     JOIN pg_namespace n ON n.oid = c.relnamespace
+--     WHERE n.nspname='public' AND c.relname='my_table' AND a.attname='old_name' AND a.attnum > 0 AND NOT a.attisdropped
+--   ) AND NOT EXISTS (
+--     SELECT 1 FROM pg_attribute a
+--     JOIN pg_class c ON c.oid = a.attrelid
+--     JOIN pg_namespace n ON n.oid = c.relnamespace
+--     WHERE n.nspname='public' AND c.relname='my_table' AND a.attname='new_name' AND a.attnum > 0 AND NOT a.attisdropped
+--   ) THEN
+--     ALTER TABLE public.my_table RENAME COLUMN old_name TO new_name;
+--   END IF;
+-- END $$;
+
+-- Example: create trigger only if missing
+-- DO $$ BEGIN
+--   IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_my_table_updated_at') THEN
+--     CREATE TRIGGER trg_my_table_updated_at BEFORE UPDATE ON public.my_table
+--     FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+--   END IF;
+-- END $$;
+
+-- Example: create policy only if missing
+-- DO $$ BEGIN
+--   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='my_table' AND policyname='my_policy_name') THEN
+--     CREATE POLICY my_policy_name ON public.my_table FOR SELECT USING (true);
+--   END IF;
+-- END $$;

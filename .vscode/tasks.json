@@ -1,0 +1,28 @@
+{
+  "$schema": "vscode://schemas/tasks",
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "MCP: build supabase server",
+      "type": "shell",
+      "command": "npm run build",
+      "options": {
+        "cwd": "${workspaceFolder}/mcp/supabase-mcp-server"
+      },
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "MCP: start supabase server",
+      "type": "shell",
+      "command": "npm start",
+      "options": {
+        "cwd": "${workspaceFolder}/mcp/supabase-mcp-server",
+        "env": {
+          "SUPABASE_URL": "${env:VITE_SUPABASE_URL}",
+          "SUPABASE_SERVICE_ROLE_KEY": "${env:SUPABASE_SERVICE_ROLE_KEY}"
+        }
+      },
+      "isBackground": false
+    }
+  ]
+}

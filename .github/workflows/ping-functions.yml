@@ -1,0 +1,20 @@
+name: Ping Supabase Functions
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Every 6 hours
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call news-ingest (optional)
+        run: |
+          if [ -n "${{ secrets.FUNCTIONS_BASE }}" ]; then
+            curl -s -f "${{ secrets.FUNCTIONS_BASE }}/news-ingest" || true
+          fi
+      - name: Weekly digest dry-run (optional)
+        run: |
+          if [ -n "${{ secrets.FUNCTIONS_BASE }}" ]; then
+            curl -s -f "${{ secrets.FUNCTIONS_BASE }}/weekly-digest?dry_run=true&limit=1" || true
+          fi
