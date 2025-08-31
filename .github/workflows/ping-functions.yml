@@ -1,20 +1,30 @@
 name: Ping Supabase Functions
 on:
   schedule:
-    - cron: '0 */6 * * *' # Every 6 hours
+    - cron: '*/30 * * * *' # Every 30 minutes
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Call news-ingest (optional)
+      - name: Ping news-ingest
+        env:
+          BASE: "${{ secrets.VITE_SUPABASE_URL }}/functions/v1"
+          TOKEN: "${{ secrets.VITE_SUPABASE_ANON_KEY }}"
         run: |
-          if [ -n "${{ secrets.FUNCTIONS_BASE }}" ]; then
-            curl -s -f "${{ secrets.FUNCTIONS_BASE }}/news-ingest" || true
+          if [ -n "$BASE" ] && [ -n "$TOKEN" ]; then
+            curl -sS -H "Authorization: Bearer $TOKEN" -H "Accept: application/json" "$BASE/news-ingest" || true
+          else
+            echo "Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY secrets; skipping"
           fi
-      - name: Weekly digest dry-run (optional)
+      - name: Weekly digest dry-run
+        env:
+          BASE: "${{ secrets.VITE_SUPABASE_URL }}/functions/v1"
+          TOKEN: "${{ secrets.VITE_SUPABASE_ANON_KEY }}"
         run: |
-          if [ -n "${{ secrets.FUNCTIONS_BASE }}" ]; then
-            curl -s -f "${{ secrets.FUNCTIONS_BASE }}/weekly-digest?dry_run=true&limit=1" || true
+          if [ -n "$BASE" ] && [ -n "$TOKEN" ]; then
+            curl -sS -H "Authorization: Bearer $TOKEN" -H "Accept: application/json" "$BASE/weekly-digest?dry_run=true&limit=1" || true
+          else
+            echo "Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY secrets; skipping"
           fi
