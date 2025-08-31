@@ -187,12 +187,15 @@ export function MainApp({ user, onLogout }: MainAppProps) {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-auto pb-20 md:pb-0">
           <ActiveComponent user={user || undefined} onLogout={onLogout} />
         </div>
 
         {/* Bottom Tab Navigation */}
-        <div className="safe-area-bottom border-t border-gray-200 bg-white p-2">
+        <div
+          className="safe-area-bottom fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white p-2 md:static"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px))' }}
+        >
           <div className="flex items-center justify-around">
             {tabs.map((tab) => {
               const Icon = tab.icon;
