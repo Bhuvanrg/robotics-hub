@@ -14,6 +14,7 @@ import {
   type SourceRow,
 } from '@/services/news';
 import { useUserPreferences } from './UserPreferencesContext';
+import { supabase } from '@/lib/supabase';
 
 const TYPES: Array<{ id: ItemType | 'all'; label: string }> = [
   { id: 'all', label: 'All' },
@@ -37,6 +38,8 @@ export function NewsFeed({ user: _user }: NewsFeedProps) {
   const [sources, setSources] = useState<SourceRow[]>([]);
   const [sourceId, setSourceId] = useState<string>('all');
   const endRef = useRef<HTMLDivElement | null>(null);
+  const [hasNew, setHasNew] = useState(false);
+  const latestTopRef = useRef<string | null>(null);
 
   const interestWords = useMemo(
     () => (preferences.interests || []).map((w) => w.toLowerCase().trim()).filter(Boolean),
@@ -107,32 +110,78 @@ export function NewsFeed({ user: _user }: NewsFeedProps) {
     };
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    getFeed({
-      type: type === 'all' ? undefined : (type as ItemType),
-      sourceId: sourceId !== 'all' ? Number(sourceId) : undefined,
-      programs: programsForQuery,
-    })
-      .then(({ items: rows, nextCursor }) => {
-        if (!cancelled) {
-          const filtered = selectedPrograms.length
-            ? rows.filter((r) => {
-                const itemProg = (r.program || 'general') as 'fll' | 'ftc' | 'frc' | 'general';
-                return itemProg === 'general' || selectedPrograms.includes(itemProg);
-              })
-            : rows;
-          const finalItems = selectedPrograms.length && filtered.length === 0 ? rows : filtered;
+  const refreshFeed = useCallback(
+    async (opts?: { reset?: boolean }) => {
+      const reset = !!opts?.reset;
+      setLoading(true);
+      try {
+        const { items: rows, nextCursor } = await getFeed({
+          type: type === 'all' ? undefined : (type as ItemType),
+          sourceId: sourceId !== 'all' ? Number(sourceId) : undefined,
+          programs: programsForQuery,
+        });
+        const filtered = selectedPrograms.length
+          ? rows.filter((r) => {
+              const itemProg = (r.program || 'general') as 'fll' | 'ftc' | 'frc' | 'general';
+              return itemProg === 'general' || selectedPrograms.includes(itemProg);
+            })
+          : rows;
+        const finalItems = selectedPrograms.length && filtered.length === 0 ? rows : filtered;
+        const top = finalItems[0]?.published_at || rows[0]?.published_at || null;
+        if (top) latestTopRef.current = top;
+        if (reset) {
           setItems(mergeAndSort([], finalItems));
           setCursor(nextCursor);
+        } else {
+          setItems((prev) => mergeAndSort(prev, finalItems));
+          // keep the cursor pointing to the oldest known item
+          setCursor((prevCursor) => {
+            if (!prevCursor) return nextCursor;
+            if (!nextCursor) return prevCursor;
+            return new Date(nextCursor) < new Date(prevCursor) ? nextCursor : prevCursor;
+          });
         }
-      })
-      .finally(() => !cancelled && setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [type, sourceId, programsForQuery, selectedPrograms, mergeAndSort]
+  );
+
+  // Initial load and when filters/preferences change
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      await refreshFeed({ reset: true });
+      if (!cancelled) setHasNew(false);
+    })();
     return () => {
       cancelled = true;
     };
-  }, [type, sourceId, interestKey, mergeAndSort, selectedPrograms, programsForQuery]);
+  }, [type, sourceId, interestKey, refreshFeed]);
+
+  // Periodic refresh to pick up newly ingested items
+  useEffect(() => {
+    const id = setInterval(() => {
+      refreshFeed();
+    }, 60_000); // every 60s
+    return () => clearInterval(id);
+  }, [refreshFeed]);
+
+  // Realtime hint: when new rows are inserted, show a refresh badge
+  useEffect(() => {
+    const channel = supabase
+      .channel('feed_items_inserts')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'feed_items' },
+        () => setHasNew(true)
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const loadMore = async () => {
     if (!cursor || loading) return;
@@ -161,6 +210,17 @@ export function NewsFeed({ user: _user }: NewsFeedProps) {
         <div className="flex items-center justify-between gap-3">
           <div className="text-sm text-muted-foreground">For you</div>
           <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant={hasNew ? 'default' : 'outline'}
+              onClick={() => {
+                setHasNew(false);
+                refreshFeed({ reset: true });
+              }}
+              className="text-xs"
+            >
+              {hasNew ? 'New posts' : 'Refresh'}
+            </Button>
             {TYPES.map((t) => (
               <Button
                 key={t.id}
